@@ -187,6 +187,88 @@ git checkout overseer-main
 git cherry-pick <commit-hash>
 ```
 
+## Automation Scripts
+
+The Overseer branching strategy includes several automation scripts to streamline common operations:
+
+### 1. Upstream Sync Script (`scripts/sync-upstream.sh`)
+
+Interactive script for syncing with Microsoft's VSCode repository:
+
+```bash
+./scripts/sync-upstream.sh
+```
+
+**Features:**
+- Automatically fetches latest changes from upstream
+- Shows preview of new commits before applying
+- Offers to merge changes into overseer-main
+- Handles error cases and provides guidance
+- Returns to your original branch when complete
+
+**Usage scenarios:**
+- Weekly/monthly upstream synchronization
+- Before starting major new features
+- When you want to incorporate latest VSCode improvements
+
+### 2. Branch Protection Setup (`scripts/setup-branch-protection.sh`)
+
+Automated GitHub branch protection configuration:
+
+```bash
+./scripts/setup-branch-protection.sh
+```
+
+**Configures:**
+- **main branch**: Prevents accidental commits, allows upstream sync
+- **overseer-main branch**: Requires PR reviews, enforces quality gates
+
+**Protection rules applied:**
+- Enforce admin compliance
+- Block force pushes and deletions
+- Require pull request reviews (overseer-main only)
+- Require conversation resolution (overseer-main only)
+- Dismiss stale reviews automatically
+
+### 3. Quick Setup Commands
+
+For common development tasks:
+
+```bash
+# Start new feature
+git checkout overseer-main && git pull origin overseer-main
+git checkout -b feature/overseer-your-feature
+
+# Sync with upstream
+./scripts/sync-upstream.sh
+
+# Setup repository protection (run once)
+./scripts/setup-branch-protection.sh
+
+# Create contribution branch
+git checkout main && git pull upstream main
+git checkout -b contrib/your-fix
+```
+
+### Script Requirements
+
+- **Git**: Repository operations
+- **GitHub CLI (gh)**: Branch protection and API operations
+- **Bash**: Script execution environment
+
+Install GitHub CLI if not available:
+```bash
+# macOS
+brew install gh
+
+# Ubuntu/Debian
+curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+sudo apt update && sudo apt install gh
+
+# Other platforms: https://cli.github.com/
+```
+
 ## Summary
 
 This branching strategy provides:
@@ -196,5 +278,7 @@ This branching strategy provides:
 - ✅ Ability to contribute back to open source
 - ✅ Scalable feature development workflow
 - ✅ Protection of intellectual property
+- ✅ Automated scripts for common operations
+- ✅ GitHub branch protection enforcement
 
 Remember: Your main branch stays synchronized with Microsoft's repository, while all Overseer development happens in overseer-main and feature branches, keeping your proprietary code private and secure.
