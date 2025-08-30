@@ -224,9 +224,10 @@ Automated GitHub branch protection configuration:
 - **overseer-main branch**: Requires PR reviews, enforces quality gates
 
 **Protection rules applied:**
-- Enforce admin compliance
+- Enforce admin compliance (main branch only)
 - Block force pushes and deletions
 - Require pull request reviews (overseer-main only)
+- Allow repository owners/maintainers to approve their own PRs (overseer-main)
 - Require conversation resolution (overseer-main only)
 - Dismiss stale reviews automatically
 

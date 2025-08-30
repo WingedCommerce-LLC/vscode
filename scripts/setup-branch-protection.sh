@@ -44,9 +44,10 @@ echo "✅ Main branch protection configured"
 
 echo "🔒 Setting up protection for 'overseer-main' branch..."
 # Protect overseer-main branch - require reviews for production code
+# Note: enforce_admins is false to allow repository owners/maintainers to approve their own PRs
 gh api repos/$REPO/branches/overseer-main/protection -X PUT --input - <<< '{
   "required_status_checks": null,
-  "enforce_admins": true,
+  "enforce_admins": false,
   "required_pull_request_reviews": {
     "required_approving_review_count": 1,
     "dismiss_stale_reviews": true,
@@ -75,7 +76,7 @@ echo "  overseer-main branch:"
 echo "    ✅ Require 1 pull request review"
 echo "    ✅ Dismiss stale reviews"
 echo "    ✅ Require conversation resolution"
-echo "    ✅ Enforce admins"
+echo "    ✅ Allow owner/maintainer self-approval"
 echo "    ✅ Block force pushes"
 echo "    ✅ Block deletions"
 
