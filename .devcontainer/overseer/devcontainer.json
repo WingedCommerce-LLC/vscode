@@ -1,0 +1,117 @@
+{
+	"name": "Overseer - AI Development Platform",
+	"image": "mcr.microsoft.com/devcontainers/python:3.11-bullseye",
+	"features": {
+		"ghcr.io/devcontainers/features/node:1": {
+			"version": "18"
+		},
+		"ghcr.io/devcontainers/features/docker-in-docker:2": {},
+		"ghcr.io/devcontainers/features/git:1": {},
+		"ghcr.io/devcontainers/features/github-cli:1": {}
+	},
+	"containerEnv": {
+		"PYTHONPATH": "/workspace/src",
+		"NODE_ENV": "development",
+		"OVERSEER_ENV": "development"
+	},
+	"overrideCommand": false,
+	"privileged": true,
+	"mounts": [
+		{
+			"source": "overseer-dev",
+			"target": "/overseer-dev",
+			"type": "volume"
+		},
+		{
+			"source": "overseer-cache",
+			"target": "/home/vscode/.cache",
+			"type": "volume"
+		}
+	],
+	"postCreateCommand": "./.devcontainer/overseer/post-create.sh",
+	"customizations": {
+		"vscode": {
+			"settings": {
+				"python.defaultInterpreterPath": "/usr/local/bin/python",
+				"python.linting.enabled": true,
+				"python.linting.pylintEnabled": true,
+				"python.formatting.provider": "black",
+				"python.testing.pytestEnabled": true,
+				"typescript.preferences.includePackageJsonAutoImports": "on",
+				"editor.formatOnSave": true,
+				"editor.codeActionsOnSave": {
+					"source.organizeImports": true
+				},
+				"files.associations": {
+					"*.overseer": "json"
+				}
+			},
+			"extensions": [
+				"ms-python.python",
+				"ms-python.black-formatter",
+				"ms-python.pylint",
+				"ms-toolsai.jupyter",
+				"ms-vscode.vscode-typescript-next",
+				"bradlc.vscode-tailwindcss",
+				"esbenp.prettier-vscode",
+				"ms-vscode.vscode-json",
+				"redhat.vscode-yaml",
+				"ms-vscode.vscode-docker",
+				"GitHub.vscode-pull-request-github",
+				"GitHub.copilot",
+				"GitHub.copilot-chat",
+				"ms-vscode.vscode-github-issue-notebooks",
+				"ms-vscode.remote-containers",
+				"ms-azuretools.vscode-docker",
+				"ms-vscode.vscode-api-tests",
+				"ms-vscode.test-adapter-converter"
+			]
+		}
+	},
+	"forwardPorts": [
+		3000,
+		8000,
+		8080,
+		8888,
+		5432,
+		3306,
+		6379
+	],
+	"portsAttributes": {
+		"3000": {
+			"label": "Frontend Dev Server",
+			"onAutoForward": "notify"
+		},
+		"8000": {
+			"label": "API Server",
+			"onAutoForward": "notify"
+		},
+		"8080": {
+			"label": "Alt Web Server",
+			"onAutoForward": "silent"
+		},
+		"8888": {
+			"label": "Jupyter Notebook",
+			"onAutoForward": "notify"
+		},
+		"5432": {
+			"label": "PostgreSQL",
+			"onAutoForward": "silent"
+		},
+		"3306": {
+			"label": "MySQL",
+			"onAutoForward": "silent"
+		},
+		"6379": {
+			"label": "Redis",
+			"onAutoForward": "silent"
+		}
+	},
+	"hostRequirements": {
+		"memory": "16gb",
+		"storage": "32gb"
+	},
+	"remoteUser": "vscode",
+	"workspaceFolder": "/workspace",
+	"workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached"
+}

@@ -1,112 +1,181 @@
-# Code - OSS Development Container
+# VSCode Development Containers
 
-[![Open in Dev Containers](https://img.shields.io/static/v1?label=Dev%20Containers&message=Open&color=blue)](https://vscode.dev/redirect?url=vscode://ms-vscode-remote.remote-containers/cloneInVolume?url=https://github.com/microsoft/vscode)
+This project supports multiple development container configurations to accommodate different development workflows.
 
-This repository includes configuration for a development container for working with Code - OSS in a local container or using [GitHub Codespaces](https://github.com/features/codespaces).
+## Available Configurations
 
-> **Tip:** The default VNC password is `vscode`. The VNC server runs on port `5901` and a web client is available on port `6080`.
+### 1. Code - OSS (`code-oss/`)
+The original VSCode development environment for working on the core VSCode codebase.
 
-## Quick start - local
+**Use this for:**
+- VSCode core development
+- Contributing to upstream VSCode
+- Working on general VSCode features
 
-If you already have VS Code and Docker installed, you can click the badge above or [here](https://vscode.dev/redirect?url=vscode://ms-vscode-remote.remote-containers/cloneInVolume?url=https://github.com/microsoft/vscode) to get started. Clicking these links will cause VS Code to automatically install the Dev Containers extension if needed, clone the source code into a container volume, and spin up a dev container for use.
+**Features:**
+- Full VSCode build environment
+- Rust toolchain for CLI development
+- Desktop environment with VNC
+- 9GB memory allocation
+- All necessary VSCode development tools
 
-1. Install Docker Desktop or Docker for Linux on your local machine. (See [docs](https://aka.ms/vscode-remote/containers/getting-started) for additional details.)
+### 2. Overseer (`overseer/`)
+AI-focused development environment optimized for the Overseer project - an AI-enabled director platform for development teams.
 
-2. **Important**: Docker needs at least **4 Cores and 8 GB of RAM** to run a full build with **9 GB of RAM** being recommended. If you are on macOS, or are using the old Hyper-V engine for Windows, update these values for Docker Desktop by right-clicking on the Docker status bar item and going to **Preferences/Settings > Resources > Advanced**.
+**Use this for:**
+- Overseer feature development
+- AI/ML development workflows
+- API and frontend development
+- Team management tool development
 
-   > **Note:** The [Resource Monitor](https://marketplace.visualstudio.com/items?itemName=mutantdino.resourcemonitor) extension is included in the container so you can keep an eye on CPU/Memory in the status bar.
+**Features:**
+- Python 3.11 with AI/ML libraries
+- Node.js 18 for frontend development
+- Docker-in-Docker support
+- 16GB memory allocation for AI workloads
+- Pre-configured AI development tools
+- Jupyter Lab support
+- Database and Redis connectivity
 
-3. Install [Visual Studio Code Stable](https://code.visualstudio.com/) or [Insiders](https://code.visualstudio.com/insiders/) and the [Dev Containers](https://aka.ms/vscode-remote/download/containers) extension.
+## How to Use Multiple Devcontainers
 
-   ![Image of Dev Containers extension](https://microsoft.github.io/vscode-remote-release/images/dev-containers-extn.png)
+### Method 1: VSCode Command Palette
+1. Open Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`)
+2. Type "Dev Containers: Reopen in Container"
+3. Select the desired configuration:
+   - `code-oss` for VSCode development
+   - `overseer` for AI/Overseer development
 
-   > **Note:** The Dev Containers extension requires the Visual Studio Code distribution of Code - OSS. See the [FAQ](https://aka.ms/vscode-remote/faq/license) for details.
+### Method 2: VSCode UI
+1. Click the green remote indicator in the bottom-left corner
+2. Select "Reopen in Container"
+3. Choose your desired configuration
 
-4. Press <kbd>Ctrl/Cmd</kbd> + <kbd>Shift</kbd> + <kbd>P</kbd> or <kbd>F1</kbd> and select **Dev Containers: Clone Repository in Container Volume...**.
+### Method 3: Direct Configuration Selection
+When VSCode detects multiple devcontainer configurations, it will prompt you to choose which one to use.
 
-   > **Tip:** While you can use your local source tree instead, operations like `npm i` can be slow on macOS or when using the Hyper-V engine on Windows. We recommend using the WSL filesystem on Windows or the "clone repository in container" approach on Windows and macOS instead since it uses "named volume" rather than the local filesystem.
+## Configuration Details
 
-5. Type `https://github.com/microsoft/vscode` (or a branch or PR URL) in the input box and press <kbd>Enter</kbd>.
+### Code - OSS Configuration
+```json
+{
+  "name": "Code - OSS",
+  "build": { "dockerfile": "Dockerfile" },
+  "features": {
+    "desktop-lite": {},
+    "rust": {}
+  },
+  "hostRequirements": { "memory": "9gb" }
+}
+```
 
-6. After the container is running:
-    1. If you have the `DISPLAY` or `WAYLAND_DISPLAY` environment variables set locally (or in WSL on Windows), desktop apps in the container will be shown in local windows.
-    2. If these are not set, open a web browser and go to [http://localhost:6080](http://localhost:6080), or use a [VNC Viewer][def] to connect to `localhost:5901` and enter `vscode` as the password. Anything you start in VS Code, or the integrated terminal, will appear here.
+### Overseer Configuration
+```json
+{
+  "name": "Overseer - AI Development Platform",
+  "image": "mcr.microsoft.com/devcontainers/python:3.11-bullseye",
+  "features": {
+    "node": { "version": "18" },
+    "docker-in-docker": {},
+    "git": {},
+    "github-cli": {}
+  },
+  "hostRequirements": {
+    "memory": "16gb",
+    "storage": "32gb"
+  }
+}
+```
 
-Next: **[Try it out!](#try-it)**
+## Port Forwarding
 
-## Quick start - GitHub Codespaces
+### Code - OSS Ports
+- `6080`: VNC web client (noVNC)
+- `5901`: VNC TCP port
 
-1. From the [microsoft/vscode GitHub repository](https://github.com/microsoft/vscode), click on the **Code** dropdown, select **Open with Codespaces**, and then click on **New codespace**. If prompted, select the **Standard** machine size (which is also the default).
+### Overseer Ports
+- `3000`: Frontend Dev Server
+- `8000`: API Server
+- `8080`: Alternative Web Server
+- `8888`: Jupyter Notebook
+- `5432`: PostgreSQL
+- `3306`: MySQL
+- `6379`: Redis
 
-   > **Note:** You will not see these options within GitHub if you are not in the Codespaces beta.
+## Getting Started
 
-2. After the codespace is up and running in your browser, press <kbd>Ctrl/Cmd</kbd> + <kbd>Shift</kbd> + <kbd>P</kbd> or <kbd>F1</kbd> and select **Ports: Focus on Ports View**.
+### For VSCode Development (Code - OSS)
+1. Select the `code-oss` configuration
+2. Wait for container to build and start
+3. Run `npm install` to install dependencies
+4. Use `npm run watch` to start development
 
-3. You should see **VNC web client (6080)** under in the list of ports. Select the line and click on the globe icon to open it in a browser tab.
-
-    > **Tip:** If you do not see the port, <kbd>Ctrl/Cmd</kbd> + <kbd>Shift</kbd> + <kbd>P</kbd> or <kbd>F1</kbd>, select **Forward a Port** and enter port `6080`.
-
-4. In the new tab, you should see noVNC. Click **Connect** and enter `vscode` as the password.
-
-Anything you start in VS Code, or the integrated terminal, will appear here.
-
-Next: **[Try it out!](#try-it)**
-
-### Using VS Code with GitHub Codespaces
-
-You may see improved VNC responsiveness when accessing a codespace from VS Code client since you can use a [VNC Viewer][def]. Here's how to do it.
-
-1. Install [Visual Studio Code Stable](https://code.visualstudio.com/) or [Insiders](https://code.visualstudio.com/insiders/) and the [GitHub Codespaces extension](https://marketplace.visualstudio.com/items?itemName=GitHub.codespaces).
-
-    > **Note:** The GitHub Codespaces extension requires the Visual Studio Code distribution of Code - OSS.
-
-2. After the VS Code is up and running, press <kbd>Ctrl/Cmd</kbd> + <kbd>Shift</kbd> + <kbd>P</kbd> or <kbd>F1</kbd>, choose **Codespaces: Create New Codespace**, and use the following settings:
-
-- `microsoft/vscode` for the repository.
-- Select any branch (e.g. **main**) - you can select a different one later.
-- Choose **Standard** (4-core, 8GB) as the size.
-
-3. After you have connected to the codespace, you can use a [VNC Viewer][def] to connect to `localhost:5901` and enter `vscode` as the password.
-
-    > **Tip:** You may also need change your VNC client's **Picture Quality** setting to **High** to get a full color desktop.
-
-4. Anything you start in VS Code, or the integrated terminal, will appear here.
-
-Next: **[Try it out!](#try-it)**
-
-## Try it
-
-This container uses the [Fluxbox](http://fluxbox.org/) window manager to keep things lean. **Right-click on the desktop** to see menu options. It works with GNOME and GTK applications, so other tools can be installed if needed.
-
-   > **Note:** You can also set the resolution from the command line by typing `set-resolution`.
-
-To start working with Code - OSS, follow these steps:
-
-1. In your local VS Code client, open a terminal (<kbd>Ctrl/Cmd</kbd> + <kbd>Shift</kbd> + <kbd>\`</kbd>) and type the following commands:
-
+### For Overseer Development
+1. Select the `overseer` configuration
+2. Wait for container to build and post-create script to complete
+3. Navigate to the `overseer/` directory
+4. Copy `.env.template` to `.env` and configure
+5. Start development:
    ```bash
-   npm i
-   bash scripts/code.sh
+   # API Development
+   cd overseer && uvicorn api.main:app --reload --host 0.0.0.0 --port 8000
+
+   # Jupyter Lab
+   jupyter lab --ip=0.0.0.0 --port=8888 --no-browser --allow-root
    ```
 
-2. After the build is complete, open a web browser or a [VNC Viewer][def] to connect to the desktop environment as described in the quick start and enter `vscode` as the password.
+## Switching Between Configurations
 
-3. You should now see Code - OSS!
+You can switch between configurations at any time:
 
-Next, let's try debugging.
+1. **Save your work** in the current container
+2. Use Command Palette → "Dev Containers: Reopen in Container"
+3. Select the new configuration
+4. VSCode will rebuild/restart with the new environment
 
-1. Shut down Code - OSS by clicking the box in the upper right corner of the Code - OSS window through your browser or VNC viewer.
+## Troubleshooting
 
-2. Go to your local VS Code client, and use the **Run / Debug** view to launch the **VS Code** configuration. (Typically the default, so you can likely just press <kbd>F5</kbd>).
+### Container Won't Start
+- Check Docker is running
+- Ensure you have sufficient memory (9GB for Code-OSS, 16GB for Overseer)
+- Try rebuilding: Command Palette → "Dev Containers: Rebuild Container"
 
-   > **Note:** If launching times out, you can increase the value of `timeout` in the "VS Code", "Attach Main Process", "Attach Extension Host", and "Attach to Shared Process" configurations in [launch.json](../.vscode/launch.json). However, running `./scripts/code.sh` first will set up Electron which will usually solve timeout issues.
+### Port Conflicts
+- Check if ports are already in use on your host system
+- Modify port forwarding in the respective `devcontainer.json`
 
-3. After a bit, Code - OSS will appear with the debugger attached!
+### Performance Issues
+- Increase Docker memory allocation in Docker Desktop settings
+- Close unused applications to free up system resources
+- Consider using volume mounts for better performance
 
-Enjoy!
+## Customization
 
-### Notes
+Each configuration can be customized by editing the respective `devcontainer.json` file:
 
-The container comes with VS Code Insiders installed. To run it from an Integrated Terminal use `VSCODE_IPC_HOOK_CLI= /usr/bin/code-insiders .`.
+- **Extensions**: Add/remove VSCode extensions
+- **Settings**: Modify VSCode settings
+- **Features**: Add/remove dev container features
+- **Ports**: Change port forwarding configuration
+- **Environment**: Modify environment variables
 
-[def]: https://www.realvnc.com/en/connect/download/viewer/
+## Contributing
+
+When contributing to this project:
+
+1. **For VSCode core changes**: Use the `code-oss` configuration
+2. **For Overseer features**: Use the `overseer` configuration
+3. **For devcontainer improvements**: Test changes in both configurations
+
+## Support
+
+If you encounter issues with the development containers:
+
+1. Check this README for common solutions
+2. Review the specific configuration files
+3. Check Docker and VSCode logs
+4. Rebuild the container if necessary
+
+---
+
+**Note**: These configurations are designed to be completely separate environments. Choose the one that matches your current development focus.
