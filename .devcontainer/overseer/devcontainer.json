@@ -10,7 +10,7 @@
 		"ghcr.io/devcontainers/features/github-cli:1": {}
 	},
 	"containerEnv": {
-		"PYTHONPATH": "/workspace/src",
+		"PYTHONPATH": "/workspaces/${localWorkspaceFolderBasename}/src",
 		"NODE_ENV": "development",
 		"OVERSEER_ENV": "development"
 	},
@@ -111,5 +111,7 @@
 		"memory": "16gb",
 		"storage": "32gb"
 	},
-	"remoteUser": "vscode"
+	"remoteUser": "vscode",
+	"workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+	"workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/${localWorkspaceFolderBasename},type=bind,consistency=cached"
 }
