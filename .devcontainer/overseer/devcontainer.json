@@ -21,11 +21,6 @@
 			"source": "overseer-dev",
 			"target": "/overseer-dev",
 			"type": "volume"
-		},
-		{
-			"source": "overseer-cache",
-			"target": "/home/vscode/.cache",
-			"type": "volume"
 		}
 	],
 	"postCreateCommand": "./.devcontainer/overseer/post-create.sh",

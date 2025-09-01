@@ -20,44 +20,23 @@ sudo apt-get install -y \
     postgresql-client \
     redis-tools
 
-# Install Python AI/ML packages
-echo "📦 Installing Python AI/ML packages..."
-pip install --upgrade pip
-pip install \
+# Install Python AI/ML packages (basic set to avoid crashes)
+echo "📦 Installing essential Python packages..."
+pip install --upgrade pip --quiet
+pip install --quiet \
     fastapi \
     uvicorn \
     pydantic \
-    sqlalchemy \
-    alembic \
-    psycopg2-binary \
-    redis \
-    celery \
-    pandas \
-    numpy \
-    scikit-learn \
-    matplotlib \
-    seaborn \
-    jupyter \
-    jupyterlab \
-    notebook \
     requests \
-    aiohttp \
     pytest \
-    pytest-asyncio \
     black \
-    pylint \
-    mypy \
-    pre-commit
+    pylint
 
-# Install Node.js packages for frontend development
-echo "📦 Installing Node.js packages..."
-npm install -g \
+# Install Node.js packages for frontend development (essential only)
+echo "📦 Installing essential Node.js packages..."
+npm install -g --silent \
     typescript \
-    ts-node \
     nodemon \
-    pm2 \
-    @types/node \
-    eslint \
     prettier
 
 # Overseer project structure already exists in the repository
