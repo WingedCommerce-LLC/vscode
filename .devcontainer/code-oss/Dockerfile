@@ -11,4 +11,4 @@ RUN NPM_CACHE="$(npm config get cache)" && rm -rf "$NPM_CACHE" && ln -s /vscode-
 RUN echo 'export DISPLAY="${DISPLAY:-:1}"' | tee -a ~/.bashrc >> ~/.zshrc
 
 USER root
-CMD chown node:node /vscode-dev && sudo -u node mkdir -p /vscode-dev/npm-cache && sleep inf
+CMD ["/bin/sh", "-c", "chown node:node /vscode-dev && sudo -u node mkdir -p /vscode-dev/npm-cache && sleep inf"]
