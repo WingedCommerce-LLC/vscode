@@ -22,7 +22,7 @@ config = context.config
 
 # Set the database URL from environment variable
 database_url = os.getenv(
-    'DATABASE_URL', 'postgresql://overseer:password@localhost:5432/overseer_dev')
+    'DATABASE_URL', 'postgresql://overseer:overseer_dev_password@postgres:5432/overseer')
 config.set_main_option('sqlalchemy.url', database_url)
 
 # Interpret the config file for Python logging.

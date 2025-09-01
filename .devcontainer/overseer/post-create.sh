@@ -17,7 +17,7 @@ trap handle_error ERR
 echo "📦 Updating system packages..."
 sudo apt-get update -qq || echo "⚠️  Package update failed, continuing..."
 
-# Install only essential system dependencies
+# Install essential system dependencies including PostgreSQL client
 echo "📦 Installing essential system tools..."
 sudo apt-get install -y --no-install-recommends \
     build-essential \
@@ -25,18 +25,37 @@ sudo apt-get install -y --no-install-recommends \
     git \
     vim \
     tree \
-    jq || echo "⚠️  Some system packages failed to install, continuing..."
+    jq \
+    postgresql-client \
+    redis-tools || echo "⚠️  Some system packages failed to install, continuing..."
 
 # Upgrade pip quietly
 echo "🐍 Upgrading pip..."
 python -m pip install --upgrade pip --quiet --no-warn-script-location || echo "⚠️  Pip upgrade failed, continuing..."
 
-# Install only core Python packages (minimal set)
-echo "📦 Installing core Python packages..."
-pip install --quiet --no-warn-script-location \
-    fastapi==0.104.1 \
-    uvicorn==0.24.0 \
-    pydantic==2.5.0 || echo "⚠️  Some Python packages failed to install, continuing..."
+# Navigate to overseer directory and install Python dependencies
+echo "📦 Installing Overseer Python dependencies..."
+cd /workspaces/vscode/overseer || cd /workspaces/*/overseer || {
+    echo "⚠️  Could not find overseer directory, skipping Python deps installation"
+    exit 0
+}
+
+# Install Python dependencies from requirements.txt
+if [ -f "requirements.txt" ]; then
+    pip install -r requirements.txt --quiet --no-warn-script-location || echo "⚠️  Some Python packages failed to install, continuing..."
+else
+    echo "⚠️  requirements.txt not found, installing core packages..."
+    pip install --quiet --no-warn-script-location \
+        fastapi==0.104.1 \
+        uvicorn==0.24.0 \
+        pydantic==2.5.0 \
+        sqlalchemy \
+        alembic \
+        psycopg2-binary \
+        python-jose[cryptography] \
+        passlib[bcrypt] \
+        python-multipart || echo "⚠️  Some Python packages failed to install, continuing..."
+fi
 
 # Install core Node.js tools
 echo "📦 Installing core Node.js tools..."
@@ -47,15 +66,33 @@ echo "🔧 Configuring Git..."
 git config --global init.defaultBranch main || true
 git config --global pull.rebase false || true
 
-# Create basic directories if they don't exist
-echo "📁 Ensuring directory structure..."
-mkdir -p /workspaces || true
-mkdir -p ~/.vscode-server || true
+# Wait for PostgreSQL to be ready
+echo "🗄️  Waiting for PostgreSQL to be ready..."
+for i in {1..30}; do
+    if pg_isready -h postgres -p 5432 -U overseer > /dev/null 2>&1; then
+        echo "✅ PostgreSQL is ready!"
+        break
+    fi
+    echo "⏳ Waiting for PostgreSQL... ($i/30)"
+    sleep 2
+done
 
-# Set proper permissions
-chmod +x .devcontainer/overseer/post-create.sh || true
+# Set up database if .env exists
+if [ -f ".env" ]; then
+    echo "🗄️  Setting up database..."
+    # Load environment variables
+    export $(cat .env | grep -v '^#' | xargs) || true
 
-# Create a simple health check script
+    # Run database migrations
+    if command -v alembic &> /dev/null; then
+        echo "🔄 Running database migrations..."
+        alembic upgrade head || echo "⚠️  Database migration failed, continuing..."
+    fi
+else
+    echo "⚠️  .env file not found. Please copy .env.template to .env and configure your environment"
+fi
+
+# Create a health check script
 cat > /tmp/overseer-health.sh << 'EOF'
 #!/bin/bash
 echo "🏥 Overseer Health Check"
@@ -63,9 +100,32 @@ echo "Python: $(python --version 2>&1 || echo 'Not available')"
 echo "Node: $(node --version 2>&1 || echo 'Not available')"
 echo "NPM: $(npm --version 2>&1 || echo 'Not available')"
 echo "Git: $(git --version 2>&1 || echo 'Not available')"
+echo "PostgreSQL Client: $(psql --version 2>&1 || echo 'Not available')"
+echo "Redis CLI: $(redis-cli --version 2>&1 || echo 'Not available')"
 echo "Working Directory: $(pwd)"
 echo "User: $(whoami)"
-echo "✅ Basic environment ready!"
+
+# Test database connection
+if command -v psql &> /dev/null; then
+    echo "🗄️  Testing PostgreSQL connection..."
+    if pg_isready -h postgres -p 5432 -U overseer > /dev/null 2>&1; then
+        echo "✅ PostgreSQL connection: OK"
+    else
+        echo "❌ PostgreSQL connection: Failed"
+    fi
+fi
+
+# Test Redis connection
+if command -v redis-cli &> /dev/null; then
+    echo "🔴 Testing Redis connection..."
+    if redis-cli -h redis ping > /dev/null 2>&1; then
+        echo "✅ Redis connection: OK"
+    else
+        echo "❌ Redis connection: Failed"
+    fi
+fi
+
+echo "✅ Environment health check complete!"
 EOF
 
 chmod +x /tmp/overseer-health.sh
@@ -73,14 +133,15 @@ chmod +x /tmp/overseer-health.sh
 
 echo "✅ Overseer development environment setup complete!"
 echo ""
-echo "🎯 Manual setup steps (run these after container starts):"
-echo "  1. Install full Python deps: pip install -r overseer/requirements.txt"
-echo "  2. Install Node deps: cd overseer && npm install"
-echo "  3. Copy .env.template to .env and configure your environment"
-echo "  4. Start the API server: cd overseer && python api/main.py"
+echo "🎯 Next steps:"
+echo "  1. Copy .env.template to .env: cp .env.template .env"
+echo "  2. Update .env with your configuration"
+echo "  3. Run database migrations: alembic upgrade head"
+echo "  4. Start the API server: uvicorn api.main:app --reload --host 0.0.0.0 --port 8000"
 echo ""
 echo "📚 Useful commands:"
 echo "  - Health check: /tmp/overseer-health.sh"
-echo "  - API development: cd overseer && uvicorn api.main:app --reload --host 0.0.0.0 --port 8000"
-echo "  - Run tests: cd overseer && pytest"
+echo "  - Database shell: psql -h postgres -U overseer -d overseer"
+echo "  - Redis shell: redis-cli -h redis"
+echo "  - Run tests: pytest"
 echo ""

@@ -1,6 +1,8 @@
 {
 	"name": "Overseer - AI Development Platform",
-	"image": "mcr.microsoft.com/devcontainers/python:3.11-bullseye",
+	"dockerComposeFile": "docker-compose.yml",
+	"service": "app",
+	"workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
 	"features": {
 		"ghcr.io/devcontainers/features/node:1": {
 			"version": "22.18.0"
@@ -9,11 +11,11 @@
 	},
 	"containerEnv": {
 		"NODE_ENV": "development",
-		"OVERSEER_ENV": "development"
+		"OVERSEER_ENV": "development",
+		"DATABASE_URL": "postgresql://overseer:overseer_dev_password@postgres:5432/overseer",
+		"REDIS_URL": "redis://redis:6379/0"
 	},
 	"remoteUser": "vscode",
-	"workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
-	"workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/${localWorkspaceFolderBasename},type=bind,consistency=cached",
 	"customizations": {
 		"vscode": {
 			"settings": {
@@ -24,17 +26,32 @@
 				"ms-python.python",
 				"ms-python.black-formatter",
 				"ms-vscode.vscode-json",
-				"ms-vscode.vscode-docker"
+				"ms-vscode.vscode-docker",
+				"ms-python.pylint",
+				"ms-python.flake8"
 			]
 		}
 	},
-	"forwardPorts": [3000, 8000],
+	"forwardPorts": [
+		3000,
+		8000,
+		5432,
+		6379
+	],
 	"portsAttributes": {
 		"3000": {
 			"label": "Frontend Dev Server"
 		},
 		"8000": {
 			"label": "API Server"
+		},
+		"5432": {
+			"label": "PostgreSQL Database"
+		},
+		"6379": {
+			"label": "Redis Cache"
 		}
-	}
+	},
+	"postCreateCommand": "bash .devcontainer/overseer/post-create.sh",
+	"shutdownAction": "stopCompose"
 }

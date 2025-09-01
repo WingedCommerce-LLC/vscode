@@ -9,7 +9,7 @@ from models.base import Base
 # Database URL from environment variable
 DATABASE_URL = os.getenv(
     'DATABASE_URL',
-    'postgresql://overseer:password@localhost:5432/overseer_dev'
+    'postgresql://overseer:overseer_dev_password@postgres:5432/overseer'
 )
 
 # Create engine with connection pooling
