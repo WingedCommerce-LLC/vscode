@@ -16,11 +16,30 @@
 		"REDIS_URL": "redis://redis:6379/0"
 	},
 	"remoteUser": "vscode",
+	"mounts": [
+		{
+			"source": "${localEnv:HOME}/.vscode-server",
+			"target": "/home/vscode/.vscode-server",
+			"type": "bind"
+		},
+		{
+			"source": "${localEnv:HOME}/.cline",
+			"target": "/home/vscode/.cline",
+			"type": "bind"
+		},
+		{
+			"source": "overseer-vscode-extensions",
+			"target": "/home/vscode/.vscode-server/extensions",
+			"type": "volume"
+		}
+	],
 	"customizations": {
 		"vscode": {
 			"settings": {
 				"python.defaultInterpreterPath": "/usr/local/bin/python",
-				"editor.formatOnSave": true
+				"editor.formatOnSave": true,
+				"cline.taskContextPersistence": true,
+				"cline.autoSaveTaskContext": true
 			},
 			"extensions": [
 				"ms-python.python",
@@ -28,7 +47,13 @@
 				"ms-vscode.vscode-json",
 				"ms-vscode.vscode-docker",
 				"ms-python.pylint",
-				"ms-python.flake8"
+				"ms-python.flake8",
+				"saoudrizwan.claude-dev",
+				"GitHub.copilot",
+				"GitHub.copilot-chat",
+				"ms-vscode.remote-containers",
+				"ms-vscode.remote-ssh",
+				"ms-vscode.remote-wsl"
 			]
 		}
 	},
@@ -52,6 +77,5 @@
 			"label": "Redis Cache"
 		}
 	},
-	"postCreateCommand": "bash .devcontainer/overseer/post-create.sh",
 	"shutdownAction": "stopCompose"
 }

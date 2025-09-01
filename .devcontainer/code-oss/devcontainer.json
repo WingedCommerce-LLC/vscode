@@ -17,6 +17,21 @@
 			"source": "vscode-dev",
 			"target": "/vscode-dev",
 			"type": "volume"
+		},
+		{
+			"source": "${localEnv:HOME}/.vscode-server",
+			"target": "/home/vscode/.vscode-server",
+			"type": "bind"
+		},
+		{
+			"source": "${localEnv:HOME}/.cline",
+			"target": "/home/vscode/.cline",
+			"type": "bind"
+		},
+		{
+			"source": "code-oss-vscode-extensions",
+			"target": "/home/vscode/.vscode-server/extensions",
+			"type": "volume"
 		}
 	],
 	"postCreateCommand": "./.devcontainer/code-oss/post-create.sh",
@@ -24,7 +39,9 @@
 		"vscode": {
 			"settings": {
 				"resmon.show.battery": false,
-				"resmon.show.cpufreq": false
+				"resmon.show.cpufreq": false,
+				"cline.taskContextPersistence": true,
+				"cline.autoSaveTaskContext": true
 			},
 			"extensions": [
 				"dbaeumer.vscode-eslint",
@@ -32,11 +49,20 @@
 				"GitHub.vscode-pull-request-github",
 				"ms-vscode.vscode-github-issue-notebooks",
 				"ms-vscode.vscode-selfhost-test-provider",
-				"mutantdino.resourcemonitor"
+				"mutantdino.resourcemonitor",
+				"saoudrizwan.claude-dev",
+				"GitHub.copilot",
+				"GitHub.copilot-chat",
+				"ms-vscode.remote-containers",
+				"ms-vscode.remote-ssh",
+				"ms-vscode.remote-wsl"
 			]
 		}
 	},
-	"forwardPorts": [6080, 5901],
+	"forwardPorts": [
+		6080,
+		5901
+	],
 	"portsAttributes": {
 		"6080": {
 			"label": "VNC web client (noVNC)",

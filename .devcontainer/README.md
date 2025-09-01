@@ -149,12 +149,38 @@ You can switch between configurations at any time:
 - Close unused applications to free up system resources
 - Consider using volume mounts for better performance
 
+## 🔧 Persistence Setup
+
+Both devcontainer configurations now include **automatic persistence** for:
+- ✅ **VS Code Extensions** (including Cline, Copilot, etc.)
+- ✅ **Cline Task Contexts** and chat history
+- ✅ **VS Code Server Data** and settings
+
+### How It Works
+- **Docker Volumes**: Separate volumes for each config (`overseer-vscode-extensions`, `code-oss-vscode-extensions`)
+- **Bind Mounts**: Your `~/.cline` directory is mounted from host system
+- **Helper Scripts**: Located in `~/.vscode-devcontainer-settings/`
+
+### Quick Commands
+```bash
+# Backup Cline contexts before major changes
+~/.vscode-devcontainer-settings/backup-cline-contexts.sh
+
+# Restore from backup if needed
+~/.vscode-devcontainer-settings/restore-cline-contexts.sh
+
+# Install missing extensions
+~/.vscode-devcontainer-settings/install-cline.sh
+```
+
+**📖 See `DEVCONTAINER_PERSISTENCE.md` in project root for complete guide.**
+
 ## Customization
 
 Each configuration can be customized by editing the respective `devcontainer.json` file:
 
-- **Extensions**: Add/remove VSCode extensions
-- **Settings**: Modify VSCode settings
+- **Extensions**: Add/remove VSCode extensions (automatically preserved)
+- **Settings**: Modify VSCode settings (automatically preserved)
 - **Features**: Add/remove dev container features
 - **Ports**: Change port forwarding configuration
 - **Environment**: Modify environment variables
