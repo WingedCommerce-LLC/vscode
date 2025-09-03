@@ -16,7 +16,7 @@ from httpx import AsyncClient
 
 # Import our application and dependencies
 from api.main import app
-from database import get_db
+from database import get_db, get_async_db
 from models.base import Base
 from models.user import User, UserRole
 from models.team import Team
@@ -74,10 +74,15 @@ async def db_session() -> AsyncGenerator[AsyncSession, None]:
 
 @pytest.fixture
 def override_get_db(db_session: AsyncSession):
-    """Override the get_db dependency to use test database."""
-    async def _override_get_db():
+    """Override the get_db and get_async_db dependencies to use test database."""
+    async def _override_get_async_db():
         yield db_session
 
+    def _override_get_db():
+        # This is for any sync endpoints that might still use get_db
+        yield db_session
+
+    app.dependency_overrides[get_async_db] = _override_get_async_db
     app.dependency_overrides[get_db] = _override_get_db
     yield
     app.dependency_overrides.clear()
@@ -162,7 +167,7 @@ async def test_team(db_session: AsyncSession, test_director: User) -> Team:
 async def auth_headers(client: TestClient, test_user: User) -> dict:
     """Get authentication headers for test user."""
     response = client.post(
-        "/auth/login",
+        "/api/auth/login",
         data={
             "username": test_user.username,
             "password": "testpassword123"
@@ -177,7 +182,7 @@ async def auth_headers(client: TestClient, test_user: User) -> dict:
 async def admin_headers(client: TestClient, test_admin: User) -> dict:
     """Get authentication headers for admin user."""
     response = client.post(
-        "/auth/login",
+        "/api/auth/login",
         data={
             "username": test_admin.username,
             "password": "adminpassword123"
@@ -192,7 +197,7 @@ async def admin_headers(client: TestClient, test_admin: User) -> dict:
 async def director_headers(client: TestClient, test_director: User) -> dict:
     """Get authentication headers for director user."""
     response = client.post(
-        "/auth/login",
+        "/api/auth/login",
         data={
             "username": test_director.username,
             "password": "directorpassword123"

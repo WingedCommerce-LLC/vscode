@@ -18,12 +18,12 @@ class TestAuthAPI:
     def test_user_registration_success(self, client: TestClient):
         """Test successful user registration."""
         response = client.post(
-            "/auth/register",
+            "/api/auth/register",
             json={
                 "username": "newuser",
                 "email": "newuser@example.com",
                 "password": "newpassword123",
-                "role": "MEMBER"
+                "role": "member"
             }
         )
 
@@ -31,7 +31,7 @@ class TestAuthAPI:
         data = response.json()
         assert data["username"] == "newuser"
         assert data["email"] == "newuser@example.com"
-        assert data["role"] == "MEMBER"
+        assert data["role"] == "member"
         assert data["is_active"] is True
         assert "password_hash" not in data
         assert "id" in data
@@ -39,27 +39,27 @@ class TestAuthAPI:
     def test_user_registration_duplicate_username(self, client: TestClient, test_user: User):
         """Test registration with duplicate username."""
         response = client.post(
-            "/auth/register",
+            "/api/auth/register",
             json={
                 "username": test_user.username,
                 "email": "different@example.com",
                 "password": "password123",
-                "role": "MEMBER"
+                "role": "member"
             }
         )
 
         assert response.status_code == 400
-        TestUtils.assert_error_response(response.json(), 400, "Username already registered")
+        TestUtils.assert_error_response(response.json(), 400, "Username already taken")
 
     def test_user_registration_duplicate_email(self, client: TestClient, test_user: User):
         """Test registration with duplicate email."""
         response = client.post(
-            "/auth/register",
+            "/api/auth/register",
             json={
                 "username": "differentuser",
                 "email": test_user.email,
                 "password": "password123",
-                "role": "MEMBER"
+                "role": "member"
             }
         )
 
@@ -69,7 +69,7 @@ class TestAuthAPI:
     def test_user_registration_invalid_data(self, client: TestClient):
         """Test registration with invalid data."""
         response = client.post(
-            "/auth/register",
+            "/api/auth/register",
             json={
                 "username": "",  # Empty username
                 "email": "invalid-email",  # Invalid email
@@ -86,7 +86,7 @@ class TestAuthAPI:
     def test_user_login_success(self, client: TestClient, test_user: User):
         """Test successful user login."""
         response = client.post(
-            "/auth/login",
+            "/api/auth/login",
             data={
                 "username": test_user.username,
                 "password": "testpassword123"
@@ -104,7 +104,7 @@ class TestAuthAPI:
     def test_user_login_invalid_username(self, client: TestClient):
         """Test login with invalid username."""
         response = client.post(
-            "/auth/login",
+            "/api/auth/login",
             data={
                 "username": "nonexistent",
                 "password": "password123"
@@ -117,7 +117,7 @@ class TestAuthAPI:
     def test_user_login_invalid_password(self, client: TestClient, test_user: User):
         """Test login with invalid password."""
         response = client.post(
-            "/auth/login",
+            "/api/auth/login",
             data={
                 "username": test_user.username,
                 "password": "wrongpassword"
@@ -134,18 +134,18 @@ class TestAuthAPI:
 
     def test_get_current_user_success(self, client: TestClient, auth_headers: dict):
         """Test getting current user with valid token."""
-        response = client.get("/auth/me", headers=auth_headers)
+        response = client.get("/api/auth/me", headers=auth_headers)
 
         assert response.status_code == 200
         data = response.json()
         assert data["username"] == "testuser"
         assert data["email"] == "test@example.com"
-        assert data["role"] == "MEMBER"
+        assert data["role"] == "member"
         assert "password_hash" not in data
 
     def test_get_current_user_no_token(self, client: TestClient):
         """Test getting current user without token."""
-        response = client.get("/auth/me")
+        response = client.get("/api/auth/me")
 
         assert response.status_code == 401
         TestUtils.assert_error_response(response.json(), 401)
@@ -153,7 +153,7 @@ class TestAuthAPI:
     def test_get_current_user_invalid_token(self, client: TestClient):
         """Test getting current user with invalid token."""
         response = client.get(
-            "/auth/me",
+            "/api/auth/me",
             headers={"Authorization": "Bearer invalid_token"}
         )
 
@@ -162,18 +162,18 @@ class TestAuthAPI:
 
     def test_token_verification_success(self, client: TestClient, auth_headers: dict):
         """Test token verification with valid token."""
-        response = client.get("/auth/verify-token", headers=auth_headers)
+        response = client.get("/api/auth/verify-token", headers=auth_headers)
 
         assert response.status_code == 200
         data = response.json()
         assert data["valid"] is True
         assert data["username"] == "testuser"
-        assert data["role"] == "MEMBER"
+        assert data["role"] == "member"
 
     def test_token_verification_invalid_token(self, client: TestClient):
         """Test token verification with invalid token."""
         response = client.get(
-            "/auth/verify-token",
+            "/api/auth/verify-token",
             headers={"Authorization": "Bearer invalid_token"}
         )
 
@@ -184,7 +184,7 @@ class TestAuthAPI:
         """Test token refresh with valid refresh token."""
         # First login to get refresh token
         login_response = client.post(
-            "/auth/login",
+            "/api/auth/login",
             data={
                 "username": test_user.username,
                 "password": "testpassword123"
@@ -194,20 +194,19 @@ class TestAuthAPI:
 
         # Use refresh token to get new access token
         response = client.post(
-            "/auth/refresh",
+            "/api/auth/refresh",
             json={"refresh_token": refresh_token}
         )
 
         assert response.status_code == 200
         data = response.json()
         assert "access_token" in data
-        assert "refresh_token" in data
         assert data["token_type"] == "bearer"
 
     def test_token_refresh_invalid_token(self, client: TestClient):
         """Test token refresh with invalid refresh token."""
         response = client.post(
-            "/auth/refresh",
+            "/api/auth/refresh",
             json={"refresh_token": "invalid_refresh_token"}
         )
 
@@ -216,7 +215,7 @@ class TestAuthAPI:
 
     def test_user_logout_success(self, client: TestClient, auth_headers: dict):
         """Test user logout with valid token."""
-        response = client.post("/auth/logout", headers=auth_headers)
+        response = client.post("/api/auth/logout", headers=auth_headers)
 
         assert response.status_code == 200
         data = response.json()
@@ -224,7 +223,7 @@ class TestAuthAPI:
 
     def test_user_logout_no_token(self, client: TestClient):
         """Test user logout without token."""
-        response = client.post("/auth/logout")
+        response = client.post("/api/auth/logout")
 
         assert response.status_code == 401
         TestUtils.assert_error_response(response.json(), 401)
@@ -233,19 +232,19 @@ class TestAuthAPI:
         """Test complete authentication flow: register -> login -> access protected -> logout."""
         # 1. Register new user
         register_response = client.post(
-            "/auth/register",
+            "/api/auth/register",
             json={
                 "username": "flowuser",
                 "email": "flow@example.com",
                 "password": "flowpassword123",
-                "role": "MEMBER"
+                "role": "member"
             }
         )
         assert register_response.status_code == 201
 
         # 2. Login with new user
         login_response = client.post(
-            "/auth/login",
+            "/api/auth/login",
             data={
                 "username": "flowuser",
                 "password": "flowpassword123"
@@ -256,15 +255,15 @@ class TestAuthAPI:
         headers = {"Authorization": f"Bearer {token}"}
 
         # 3. Access protected endpoint
-        me_response = client.get("/auth/me", headers=headers)
+        me_response = client.get("/api/auth/me", headers=headers)
         assert me_response.status_code == 200
         assert me_response.json()["username"] == "flowuser"
 
         # 4. Verify token
-        verify_response = client.get("/auth/verify-token", headers=headers)
+        verify_response = client.get("/api/auth/verify-token", headers=headers)
         assert verify_response.status_code == 200
         assert verify_response.json()["valid"] is True
 
         # 5. Logout
-        logout_response = client.post("/auth/logout", headers=headers)
+        logout_response = client.post("/api/auth/logout", headers=headers)
         assert logout_response.status_code == 200

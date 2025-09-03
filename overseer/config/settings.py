@@ -77,7 +77,7 @@ class Settings(BaseSettings):
 
     # Security Configuration
     TRUSTED_HOSTS: list = Field(
-        default=["localhost", "127.0.0.1", "*.overseer.dev"],
+        default=["localhost", "127.0.0.1", "*.overseer.dev", "testserver"],
         env="TRUSTED_HOSTS"
     )
 

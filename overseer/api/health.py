@@ -14,7 +14,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
-from database import get_db, engine
+from database import get_db, sync_engine
 from config.settings import get_settings
 
 router = APIRouter(prefix="/health", tags=["health"])
@@ -30,7 +30,7 @@ async def check_database() -> Dict[str, Any]:
         Dict containing database health status
     """
     try:
-        with engine.connect() as conn:
+        with sync_engine.connect() as conn:
             # Test basic connectivity
             result = conn.execute(text("SELECT 1"))
             result.fetchone()

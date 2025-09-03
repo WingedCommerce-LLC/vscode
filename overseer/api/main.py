@@ -244,7 +244,7 @@ async def general_exception_handler(request: Request, exc: Exception):
 
 
 # Include routers
-app.include_router(auth_router)
+app.include_router(auth_router, prefix="/api")
 app.include_router(health_router)
 app.include_router(users_router, prefix="/api/users", tags=["users"])
 app.include_router(teams_router, prefix="/api/teams", tags=["teams"])

@@ -4,14 +4,15 @@ Authentication API endpoints for Overseer platform.
 This module provides user registration, login, logout, and token refresh endpoints.
 """
 
-from datetime import timedelta
+from datetime import timedelta, datetime
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 from pydantic import BaseModel, EmailStr
 from typing import Optional
 
-from database import get_db
+from database import get_async_db
 from models.user import User, UserRole
 from auth.password import verify_password, get_password_hash
 from auth.jwt import (
@@ -65,13 +66,13 @@ class RefreshTokenRequest(BaseModel):
 
 
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
-def register_user(user_data: UserRegister, db: Session = Depends(get_db)):
+async def register_user(user_data: UserRegister, db: AsyncSession = Depends(get_async_db)):
     """
     Register a new user.
 
     Args:
         user_data: User registration data
-        db: Database session
+        db: Async database session
 
     Returns:
         UserResponse: The created user data
@@ -80,8 +81,8 @@ def register_user(user_data: UserRegister, db: Session = Depends(get_db)):
         HTTPException: If email or username already exists
     """
     # Check if user with email already exists
-    existing_user = db.query(User).filter(
-        User.email == user_data.email).first()
+    result = await db.execute(select(User).where(User.email == user_data.email))
+    existing_user = result.scalar_one_or_none()
     if existing_user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -89,8 +90,8 @@ def register_user(user_data: UserRegister, db: Session = Depends(get_db)):
         )
 
     # Check if username already exists
-    existing_username = db.query(User).filter(
-        User.username == user_data.username).first()
+    result = await db.execute(select(User).where(User.username == user_data.username))
+    existing_username = result.scalar_one_or_none()
     if existing_username:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -108,8 +109,8 @@ def register_user(user_data: UserRegister, db: Session = Depends(get_db)):
     )
 
     db.add(db_user)
-    db.commit()
-    db.refresh(db_user)
+    await db.commit()
+    await db.refresh(db_user)
 
     return UserResponse(
         id=str(db_user.id),
@@ -123,16 +124,16 @@ def register_user(user_data: UserRegister, db: Session = Depends(get_db)):
 
 
 @router.post("/login", response_model=LoginResponse)
-def login_user(
+async def login_user(
     form_data: OAuth2PasswordRequestForm = Depends(),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_async_db)
 ):
     """
     Authenticate user and return access and refresh tokens.
 
     Args:
         form_data: OAuth2 password form data (username and password)
-        db: Database session
+        db: Async database session
 
     Returns:
         LoginResponse: Access token, refresh token, and user data
@@ -141,7 +142,8 @@ def login_user(
         HTTPException: If authentication fails
     """
     # Find user by username
-    user = db.query(User).filter(User.username == form_data.username).first()
+    result = await db.execute(select(User).where(User.username == form_data.username))
+    user = result.scalar_one_or_none()
 
     if not user or not verify_password(form_data.password, user.password_hash):
         raise HTTPException(
@@ -157,9 +159,8 @@ def login_user(
         )
 
     # Update last login
-    from datetime import datetime
     user.last_login = datetime.utcnow()
-    db.commit()
+    await db.commit()
 
     # Create tokens
     token_data = {
@@ -195,16 +196,16 @@ def login_user(
 
 
 @router.post("/refresh", response_model=Token)
-def refresh_access_token(
+async def refresh_access_token(
     refresh_data: RefreshTokenRequest,
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_async_db)
 ):
     """
     Refresh access token using refresh token.
 
     Args:
         refresh_data: Refresh token request data
-        db: Database session
+        db: Async database session
 
     Returns:
         Token: New access token
@@ -223,7 +224,8 @@ def refresh_access_token(
         refresh_data.refresh_token, credentials_exception)
 
     # Get user from database
-    user = db.query(User).filter(User.username == token_data.username).first()
+    result = await db.execute(select(User).where(User.username == token_data.username))
+    user = result.scalar_one_or_none()
     if not user or not user.is_active:
         raise credentials_exception
 
@@ -248,7 +250,7 @@ def refresh_access_token(
 
 
 @router.post("/logout")
-def logout_user(current_user: User = Depends(get_current_active_user)):
+async def logout_user(current_user: User = Depends(get_current_active_user)):
     """
     Logout current user.
 
@@ -266,7 +268,7 @@ def logout_user(current_user: User = Depends(get_current_active_user)):
 
 
 @router.get("/me", response_model=UserResponse)
-def get_current_user_profile(current_user: User = Depends(get_current_active_user)):
+async def get_current_user_profile(current_user: User = Depends(get_current_active_user)):
     """
     Get current user profile information.
 
@@ -288,7 +290,7 @@ def get_current_user_profile(current_user: User = Depends(get_current_active_use
 
 
 @router.get("/verify-token")
-def verify_token_endpoint(current_user: User = Depends(get_current_active_user)):
+async def verify_token_endpoint(current_user: User = Depends(get_current_active_user)):
     """
     Verify if the current token is valid.
 

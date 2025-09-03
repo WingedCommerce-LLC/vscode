@@ -6,25 +6,26 @@ This module provides dependency functions for user authentication and authorizat
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
-from sqlalchemy.orm import Session
-from database import get_db
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from database import get_async_db
 from models.user import User
 from .jwt import verify_token
 
 # OAuth2 scheme for token authentication
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/auth/login")
 
 
-def get_current_user(
+async def get_current_user(
     token: str = Depends(oauth2_scheme),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_async_db)
 ) -> User:
     """
     Get the current authenticated user from JWT token.
 
     Args:
         token: JWT token from Authorization header
-        db: Database session
+        db: Async database session
 
     Returns:
         User: The authenticated user
@@ -41,7 +42,8 @@ def get_current_user(
     token_data = verify_token(token, credentials_exception)
 
     # Query user by username (primary identifier in token)
-    user = db.query(User).filter(User.username == token_data.username).first()
+    result = await db.execute(select(User).where(User.username == token_data.username))
+    user = result.scalar_one_or_none()
 
     if user is None:
         raise credentials_exception
@@ -49,7 +51,7 @@ def get_current_user(
     return user
 
 
-def get_current_active_user(current_user: User = Depends(get_current_user)) -> User:
+async def get_current_active_user(current_user: User = Depends(get_current_user)) -> User:
     """
     Get the current active user (must be active and not disabled).
 
@@ -70,9 +72,9 @@ def get_current_active_user(current_user: User = Depends(get_current_user)) -> U
     return current_user
 
 
-def get_optional_current_user(
+async def get_optional_current_user(
     token: str = Depends(oauth2_scheme),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_async_db)
 ) -> User | None:
     """
     Get the current user if authenticated, otherwise return None.
@@ -80,13 +82,13 @@ def get_optional_current_user(
 
     Args:
         token: JWT token from Authorization header
-        db: Database session
+        db: Async database session
 
     Returns:
         User | None: The authenticated user or None
     """
     try:
-        return get_current_user(token, db)
+        return await get_current_user(token, db)
     except HTTPException:
         return None
 
@@ -101,7 +103,7 @@ def require_role(required_role):
     Returns:
         A dependency function that checks user role
     """
-    def role_checker(current_user: User = Depends(get_current_active_user)) -> User:
+    async def role_checker(current_user: User = Depends(get_current_active_user)) -> User:
         if not current_user.has_permission(required_role):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
