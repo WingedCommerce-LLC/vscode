@@ -29,6 +29,7 @@ from api.auth import router as auth_router
 from api.health import router as health_router
 from api.users import router as users_router
 from api.teams import router as teams_router
+from api.agents import router as agents_router
 
 # Initialize settings and logging
 settings = get_settings()
@@ -248,6 +249,7 @@ app.include_router(auth_router, prefix="/api")
 app.include_router(health_router)
 app.include_router(users_router, prefix="/api/users", tags=["users"])
 app.include_router(teams_router, prefix="/api/teams", tags=["teams"])
+app.include_router(agents_router, prefix="/api", tags=["agents"])
 
 
 @app.get("/", tags=["root"])

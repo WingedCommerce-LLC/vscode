@@ -97,7 +97,7 @@ def client(override_get_db) -> TestClient:
 @pytest_asyncio.fixture
 async def async_client(override_get_db) -> AsyncGenerator[AsyncClient, None]:
     """Create an async test client with database override."""
-    async with AsyncClient(base_url="http://test") as ac:
+    async with AsyncClient(app=app, base_url="http://test") as ac:
         yield ac
 
 
@@ -161,6 +161,26 @@ async def test_team(db_session: AsyncSession, test_director: User) -> Team:
     await db_session.commit()
     await db_session.refresh(team)
     return team
+
+
+@pytest_asyncio.fixture
+async def test_agent(db_session: AsyncSession, test_user: User):
+    """Create a test agent."""
+    from models.agent import Agent, AgentStatus, AgentType
+
+    agent = Agent(
+        name="Test Agent",
+        description="A test AI agent for testing",
+        type=AgentType.GENERAL.value,
+        owner_id=test_user.id,
+        status=AgentStatus.INACTIVE.value,
+        capabilities=["python", "testing"],
+        is_approved=False
+    )
+    db_session.add(agent)
+    await db_session.commit()
+    await db_session.refresh(agent)
+    return agent
 
 
 @pytest_asyncio.fixture
