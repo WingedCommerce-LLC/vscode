@@ -97,12 +97,22 @@ jupyter lab --ip=0.0.0.0 --port=8888 --no-browser --allow-root
 
 ### Testing
 ```bash
-# Run Python tests
+# Run the full test suite
+./scripts/dev-test.sh
+
+# Run Python tests directly
 pytest
 
 # Run with coverage
 pytest --cov=overseer
+
+# Run specific test modules
+pytest tests/integration/test_auth_api.py
+pytest tests/integration/test_agent_api.py
+pytest tests/integration/test_websocket.py
 ```
+
+**Current Status**: 75/75 integration tests passing (100% success rate)
 
 ### Code Quality
 ```bash

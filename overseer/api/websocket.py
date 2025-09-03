@@ -271,7 +271,7 @@ class ConnectionManager:
         except Exception as e:
             logger.error(f"Error handling message from agent {agent_id}: {str(e)}", extra={
                 "agent_id": agent_id,
-                "message": message,
+                "msg_data": message,
                 "error": str(e)
             })
 
@@ -280,12 +280,15 @@ class ConnectionManager:
         try:
             heartbeat = AgentHeartbeatMessage(**message)
 
+            # Convert agent_id string to UUID for database query
+            agent_uuid = uuid.UUID(agent_id)
+
             # Update agent in database
-            agent = await db.get(Agent, agent_id)
+            agent = await db.get(Agent, agent_uuid)
             if agent:
                 # Use update() method for proper SQLAlchemy column assignment
                 from sqlalchemy import update
-                stmt = update(Agent).where(Agent.id == agent_id).values(
+                stmt = update(Agent).where(Agent.id == agent_uuid).values(
                     last_heartbeat=datetime.utcnow(),
                     status=heartbeat.status if heartbeat.status else agent.status,
                     performance_metrics=heartbeat.performance_metrics if heartbeat.performance_metrics else agent.performance_metrics
@@ -313,12 +316,15 @@ class ConnectionManager:
         try:
             status_update = AgentStatusMessage(**message)
 
+            # Convert agent_id string to UUID for database query
+            agent_uuid = uuid.UUID(agent_id)
+
             # Update agent in database
-            agent = await db.get(Agent, agent_id)
+            agent = await db.get(Agent, agent_uuid)
             if agent:
                 # Use update() method for proper SQLAlchemy column assignment
                 from sqlalchemy import update
-                stmt = update(Agent).where(Agent.id == agent_id).values(
+                stmt = update(Agent).where(Agent.id == agent_uuid).values(
                     status=status_update.status
                 )
                 await db.execute(stmt)

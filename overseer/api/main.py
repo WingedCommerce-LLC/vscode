@@ -16,6 +16,7 @@ from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
+from pydantic import ValidationError
 
 # Load .env file from the project root
 load_dotenv()
@@ -165,6 +166,59 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     """
     Handle request validation errors with detailed field information.
     """
+    # Process validation errors to ensure they're JSON serializable
+    processed_errors = []
+    for error in exc.errors():
+        processed_error = {
+            "loc": error.get("loc", []),
+            "msg": str(error.get("msg", "")),
+            "type": error.get("type", ""),
+        }
+        # Add input if it's serializable
+        if "input" in error:
+            try:
+                # Try to serialize the input to check if it's JSON serializable
+                import json
+                json.dumps(error["input"])
+                processed_error["input"] = error["input"]
+            except (TypeError, ValueError):
+                # If not serializable, convert to string
+                processed_error["input"] = str(error["input"])
+
+        processed_errors.append(processed_error)
+
+    error_response = {
+        "error": {
+            "type": "ValidationError",
+            "message": "Request validation failed",
+            "details": processed_errors,
+        },
+        "request": {
+            "method": request.method,
+            "path": request.url.path,
+        },
+        "timestamp": datetime.utcnow().isoformat(),
+    }
+
+    logger.warning(
+        f"Validation Error: {request.method} {request.url.path}",
+        extra={
+            "validation_errors": [str(error) for error in exc.errors()],
+            "path": request.url.path,
+        }
+    )
+
+    return JSONResponse(
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        content=error_response
+    )
+
+
+@app.exception_handler(ValidationError)
+async def pydantic_validation_exception_handler(request: Request, exc: ValidationError):
+    """
+    Handle Pydantic validation errors.
+    """
     error_response = {
         "error": {
             "type": "ValidationError",
@@ -179,7 +233,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     }
 
     logger.warning(
-        f"Validation Error: {request.method} {request.url.path}",
+        f"Pydantic Validation Error: {request.method} {request.url.path}",
         extra={
             "validation_errors": exc.errors(),
             "path": request.url.path,

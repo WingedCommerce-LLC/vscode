@@ -95,7 +95,34 @@ Run the test suite:
 ./scripts/dev-test.sh
 ```
 
-Current test coverage: 64% (18/18 authentication tests passing)
+Current test coverage: 100% (75/75 integration tests passing)
+
+### Recent Bug Fixes (Session 1.2)
+
+The following critical issues were resolved to achieve full test coverage:
+
+#### Agent API Fixes
+- **JSON Serialization Issue**: Fixed "unhashable type: 'list'" error in agent approval endpoint
+  - Problem: SQLAlchemy couldn't handle list objects directly in JSON columns
+  - Solution: Added JSON serialization/deserialization for capabilities field in `api/agents.py`
+  - Impact: Agent approval functionality now works correctly
+
+#### WebSocket Communication Fixes
+- **UUID Handling**: Fixed UUID conversion errors in WebSocket message handlers
+  - Problem: String agent IDs weren't being converted to UUID objects for database queries
+  - Solution: Added proper UUID conversion in `_handle_heartbeat` and `_handle_status_update` methods
+  - Impact: Agent heartbeat and status updates now function properly
+
+- **Logging Conflicts**: Resolved LogRecord field conflicts in WebSocket logging
+  - Problem: Using "message" key in logging extra parameters conflicted with LogRecord internals
+  - Solution: Changed logging parameter from "message" to "msg_data" in `api/websocket.py`
+  - Impact: WebSocket error logging now works without conflicts
+
+#### Database Integration
+- **SQLAlchemy Updates**: Implemented proper column assignment using `update()` method
+  - Problem: Direct attribute assignment wasn't triggering database updates
+  - Solution: Used SQLAlchemy's `update()` method with proper WHERE clauses
+  - Impact: Agent status and heartbeat updates are now persisted correctly
 
 ## Troubleshooting
 

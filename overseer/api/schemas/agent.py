@@ -4,7 +4,7 @@ Agent API Schemas
 This module contains Pydantic schemas for agent-related API operations.
 """
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, validator, field_validator, model_validator, ValidationError
 from typing import Optional, List, Dict, Any
 from datetime import datetime
 from enum import Enum
@@ -119,12 +119,12 @@ class AgentStatusUpdateRequest(BaseModel):
     status: AgentStatusEnum = Field(..., description="New agent status")
     error_message: Optional[str] = Field(None, max_length=1000, description="Error message if status is ERROR")
 
-    @validator('error_message')
-    def validate_error_message(cls, v, values):
+    @model_validator(mode='after')
+    def validate_error_message_required(self):
         """Validate error message is provided when status is ERROR."""
-        if values.get('status') == AgentStatusEnum.ERROR and not v:
+        if self.status == AgentStatusEnum.ERROR and not self.error_message:
             raise ValueError('Error message is required when status is ERROR')
-        return v
+        return self
 
 
 class AgentHeartbeatRequest(BaseModel):

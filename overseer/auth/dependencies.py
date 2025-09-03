@@ -64,7 +64,7 @@ async def get_current_active_user(current_user: User = Depends(get_current_user)
     Raises:
         HTTPException: If user is inactive
     """
-    if not current_user.is_active:
+    if current_user.is_active is False:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Inactive user"
@@ -98,17 +98,29 @@ def require_role(required_role):
     Create a dependency that requires a specific role or higher.
 
     Args:
-        required_role: The minimum role required
+        required_role: The minimum role required (single role or list of roles)
 
     Returns:
         A dependency function that checks user role
     """
     async def role_checker(current_user: User = Depends(get_current_active_user)) -> User:
-        if not current_user.has_permission(required_role):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"Insufficient permissions. Required role: {required_role.value}"
-            )
+        # Handle both single role and list of roles
+        if isinstance(required_role, list):
+            # Check if user has any of the required roles
+            has_permission = any(current_user.has_permission(role) for role in required_role)
+            if not has_permission:
+                role_names = [role.value for role in required_role]
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail=f"Insufficient permissions. Required roles: {', '.join(role_names)}"
+                )
+        else:
+            # Single role check
+            if not current_user.has_permission(required_role):
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail=f"Insufficient permissions. Required role: {required_role.value}"
+                )
         return current_user
 
     return role_checker

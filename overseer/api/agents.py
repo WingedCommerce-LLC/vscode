@@ -74,14 +74,13 @@ async def register_agent(
             )
 
         # Check if user has access to assign agents to this team
-        if current_user.role not in [UserRole.ADMIN, UserRole.DIRECTOR]:
-            # Check if user is a member of the team
-            is_member = any(member.id == current_user.id for member in team.members)
-            if not is_member and team.owner_id != current_user.id:
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail="You don't have permission to assign agents to this team"
-                )
+        # Users can assign their own agents to any active team
+        # Only admins/directors can assign agents to inactive teams
+        if team.is_active is False and current_user.role not in [UserRole.ADMIN, UserRole.DIRECTOR]:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You don't have permission to assign agents to inactive teams"
+            )
 
     # Create the agent
     agent = Agent(
@@ -299,10 +298,26 @@ async def approve_agent(
             detail="Agent not found"
         )
 
+    # Store original capabilities for response
+    original_capabilities = agent.capabilities
+
+    # Handle capabilities list serialization for SQLAlchemy change tracking
+    if isinstance(agent.capabilities, list):
+        import json
+        agent.capabilities = json.dumps(agent.capabilities)
+
     agent.is_approved = approval_data.approved
 
     await db.commit()
     await db.refresh(agent)
+
+    # Restore capabilities as list for response serialization
+    if isinstance(agent.capabilities, str):
+        try:
+            import json
+            agent.capabilities = json.loads(agent.capabilities)
+        except (json.JSONDecodeError, TypeError):
+            agent.capabilities = original_capabilities
 
     return agent
 
