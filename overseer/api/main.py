@@ -27,6 +27,8 @@ from api.logging_config import setup_logging, set_correlation_id, clear_correlat
 # Import routers
 from api.auth import router as auth_router
 from api.health import router as health_router
+from api.users import router as users_router
+from api.teams import router as teams_router
 
 # Initialize settings and logging
 settings = get_settings()
@@ -244,6 +246,8 @@ async def general_exception_handler(request: Request, exc: Exception):
 # Include routers
 app.include_router(auth_router)
 app.include_router(health_router)
+app.include_router(users_router, prefix="/api/users", tags=["users"])
+app.include_router(teams_router, prefix="/api/teams", tags=["teams"])
 
 
 @app.get("/", tags=["root"])

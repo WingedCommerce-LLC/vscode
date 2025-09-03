@@ -89,3 +89,24 @@ def get_optional_current_user(
         return get_current_user(token, db)
     except HTTPException:
         return None
+
+
+def require_role(required_role):
+    """
+    Create a dependency that requires a specific role or higher.
+
+    Args:
+        required_role: The minimum role required
+
+    Returns:
+        A dependency function that checks user role
+    """
+    def role_checker(current_user: User = Depends(get_current_active_user)) -> User:
+        if not current_user.has_permission(required_role):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Insufficient permissions. Required role: {required_role.value}"
+            )
+        return current_user
+
+    return role_checker
