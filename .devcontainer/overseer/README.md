@@ -6,8 +6,9 @@ This devcontainer provides a minimal, stable environment for developing the Over
 
 1. **Open in devcontainer**: Use VS Code's "Reopen in Container" command
 2. **Wait for container to start**: The container should start without crashes
-3. **Run setup script**: Execute `./devcontainer/overseer/setup.sh` to install dependencies
-4. **Start developing**: Begin working on your Overseer features
+3. **Run setup script**: Execute `./.devcontainer/overseer/setup.sh` to install dependencies and fix permissions
+4. **Reload VS Code window**: Press `Ctrl+Shift+P` → "Developer: Reload Window" to ensure extensions load properly
+5. **Start developing**: Begin working on your Overseer features
 
 ## What's Included
 
@@ -19,10 +20,14 @@ This devcontainer provides a minimal, stable environment for developing the Over
 
 ### Manual Setup (via setup.sh)
 - Essential system tools (build-essential, curl, vim, tree, jq)
+- PostgreSQL and Redis client tools
 - Core Python packages (FastAPI, Uvicorn, Pydantic)
 - TypeScript
 - Full Overseer dependencies from requirements.txt and package.json
 - Environment file setup (.env from template)
+- VS Code extensions directory permission fixes
+- Cline directory setup and permissions
+- Database connection testing and migration setup
 
 ## Why This Approach?
 
@@ -44,24 +49,37 @@ This simplified approach:
 
 1. **Run the setup script**:
    ```bash
-   ./devcontainer/overseer/setup.sh
+   ./.devcontainer/overseer/setup.sh
    ```
 
-2. **Configure environment**:
+2. **Reload VS Code window** (important for extensions):
+   ```
+   Ctrl+Shift+P → "Developer: Reload Window"
+   ```
+
+3. **Configure environment**:
    ```bash
    # Edit your environment variables
    code overseer/.env
    ```
 
-3. **Start the API server**:
+4. **Run database migrations**:
+   ```bash
+   cd overseer
+   alembic upgrade head
+   ```
+
+5. **Start the API server**:
    ```bash
    cd overseer
    uvicorn api.main:app --reload --host 0.0.0.0 --port 8000
    ```
 
-4. **Access your application**:
+6. **Access your application**:
    - API: http://localhost:8000
    - Frontend: http://localhost:3000 (when running)
+   - Database: `psql -h postgres -U overseer -d overseer`
+   - Redis: `redis-cli -h redis`
 
 ### Development Commands
 
@@ -94,11 +112,34 @@ cd overseer && uvicorn api.main:app --reload --host 0.0.0.0 --port 8000
 - Run individual commands from the script manually
 - Check internet connectivity for package downloads
 - Verify file permissions: `ls -la .devcontainer/overseer/setup.sh`
+- Make script executable: `chmod +x .devcontainer/overseer/setup.sh`
 
 ### VSCode Extensions Not Loading
+- **Most common fix**: Run the setup script first, then reload VS Code window
 - Reload the window: Ctrl+Shift+P → "Developer: Reload Window"
 - Check extension installation in the Extensions panel
+- Verify extensions directory permissions: `ls -la ~/.vscode-server/extensions`
 - Some extensions may need manual installation
+
+### Permission Errors
+- Run the setup script which includes permission fixes
+- Check file ownership: `ls -la ~/.vscode-server/`
+- Manually fix permissions if needed:
+  ```bash
+  sudo chown -R vscode:vscode ~/.vscode-server/extensions
+  chmod -R 755 ~/.vscode-server/extensions
+  ```
+
+### Database Connection Issues
+- Ensure PostgreSQL service is running: `docker ps | grep postgres`
+- Test connection: `pg_isready -h postgres -p 5432 -U overseer`
+- Check environment variables in `overseer/.env`
+- Wait for services to be ready (setup script includes wait logic)
+
+### Cline Extension Issues
+- Ensure Cline directory exists: `ls -la ~/.cline`
+- Check permissions: `sudo chown -R vscode:vscode ~/.cline`
+- Use persistence scripts in `~/.vscode-devcontainer-settings/`
 
 ## Configuration Files
 

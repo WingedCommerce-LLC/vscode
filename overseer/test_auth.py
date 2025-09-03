@@ -10,11 +10,11 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from .api.main import app
-from .database import get_db
-from .models.base import Base
-from .models.user import User, UserRole
-from .auth.password import get_password_hash
+from api.main import app
+from database import get_db
+from models.base import Base
+from models.user import User, UserRole
+from auth.password import get_password_hash
 
 # Test database setup
 SQLALCHEMY_DATABASE_URL = "sqlite:///./test_auth.db"

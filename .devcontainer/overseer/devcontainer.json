@@ -53,7 +53,8 @@
 				"GitHub.copilot-chat",
 				"ms-vscode.remote-containers",
 				"ms-vscode.remote-ssh",
-				"ms-vscode.remote-wsl"
+				"ms-vscode.remote-wsl",
+				"ms-vscode.npm-scripts"
 			]
 		}
 	},

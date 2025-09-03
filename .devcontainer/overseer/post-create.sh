@@ -131,6 +131,69 @@ EOF
 chmod +x /tmp/overseer-health.sh
 /tmp/overseer-health.sh
 
+# Set up persistence system
+echo "🔧 Setting up dev container persistence..."
+
+# Fix VS Code extensions directory permissions
+echo "🔧 Fixing VS Code extensions directory permissions..."
+if [ -d "$HOME/.vscode-server/extensions" ]; then
+    sudo chown -R vscode:vscode "$HOME/.vscode-server/extensions" || echo "⚠️  Could not fix extensions permissions, continuing..."
+    chmod -R 755 "$HOME/.vscode-server/extensions" || echo "⚠️  Could not set extensions permissions, continuing..."
+else
+    echo "📁 Creating VS Code extensions directory..."
+    mkdir -p "$HOME/.vscode-server/extensions"
+    sudo chown -R vscode:vscode "$HOME/.vscode-server/extensions" || echo "⚠️  Could not set extensions ownership, continuing..."
+    chmod -R 755 "$HOME/.vscode-server/extensions" || echo "⚠️  Could not set extensions permissions, continuing..."
+fi
+
+# Ensure Cline directory exists on host
+if [ ! -d "$HOME/.cline" ]; then
+    echo "📁 Creating Cline directory..."
+    mkdir -p "$HOME/.cline"
+fi
+
+# Create backup directory
+if [ ! -d "$HOME/.cline-backups" ]; then
+    echo "📁 Creating backup directory..."
+    mkdir -p "$HOME/.cline-backups"
+fi
+
+# Install extensions if they're missing
+echo "🔌 Checking and installing required extensions..."
+
+# List of required extensions
+REQUIRED_EXTENSIONS=(
+    "saoudrizwan.claude-dev"
+    "ms-vscode.npm-scripts"
+    "ms-python.python"
+    "ms-python.black-formatter"
+    "ms-vscode.vscode-json"
+    "ms-vscode.vscode-docker"
+    "ms-python.pylint"
+    "ms-python.flake8"
+    "GitHub.copilot"
+    "GitHub.copilot-chat"
+    "ms-vscode.remote-containers"
+    "ms-vscode.remote-ssh"
+    "ms-vscode.remote-wsl"
+)
+
+# Install missing extensions
+for extension in "${REQUIRED_EXTENSIONS[@]}"; do
+    if ! code --list-extensions | grep -q "$extension"; then
+        echo "📦 Installing extension: $extension"
+        code --install-extension "$extension" --force || echo "⚠️  Failed to install $extension, continuing..."
+    else
+        echo "✅ Extension already installed: $extension"
+    fi
+done
+
+# Run the Cline installation script if available
+if [ -f "$HOME/.vscode-devcontainer-settings/install-cline.sh" ]; then
+    echo "🔧 Running Cline installation script..."
+    "$HOME/.vscode-devcontainer-settings/install-cline.sh" || echo "⚠️  Extension installation script failed, continuing..."
+fi
+
 echo "✅ Overseer development environment setup complete!"
 echo ""
 echo "🎯 Next steps:"
@@ -144,4 +207,10 @@ echo "  - Health check: /tmp/overseer-health.sh"
 echo "  - Database shell: psql -h postgres -U overseer -d overseer"
 echo "  - Redis shell: redis-cli -h redis"
 echo "  - Run tests: pytest"
+echo ""
+echo "🔧 Persistence commands:"
+echo "  - Backup Cline contexts: ~/.vscode-devcontainer-settings/backup-cline-contexts.sh"
+echo "  - Restore contexts: ~/.vscode-devcontainer-settings/restore-cline-contexts.sh"
+echo "  - Install extensions: ~/.vscode-devcontainer-settings/install-cline.sh"
+echo "  - Help: cat ~/.vscode-devcontainer-settings/README.md"
 echo ""
