@@ -359,3 +359,4 @@ docs/build/
 # Keep scripts but ignore any generated script outputs
 scripts/output/
 scripts/logs/
+.env
