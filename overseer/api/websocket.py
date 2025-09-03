@@ -386,6 +386,10 @@ class ConnectionManager:
             "connection_metadata": self.connection_metadata
         }
 
+    async def is_agent_connected(self, agent_id: str) -> bool:
+        """Check if an agent is currently connected via WebSocket."""
+        return str(agent_id) in self.active_connections
+
 
 # Global connection manager instance
 connection_manager = ConnectionManager()

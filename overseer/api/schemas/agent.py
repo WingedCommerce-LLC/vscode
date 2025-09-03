@@ -199,3 +199,39 @@ class AgentStatsResponse(BaseModel):
     pending_approval: int = Field(..., description="Number of agents pending approval")
     by_type: Dict[str, int] = Field(..., description="Agent count by type")
     by_team: Dict[str, int] = Field(..., description="Agent count by team")
+
+
+class AgentHealthResponse(BaseModel):
+    """Schema for agent health response."""
+    agent_id: uuid.UUID = Field(..., description="Agent ID")
+    is_healthy: bool = Field(..., description="Whether the agent is healthy")
+    status: str = Field(..., description="Current agent status")
+    last_heartbeat: Optional[datetime] = Field(None, description="Last heartbeat timestamp")
+    last_active: Optional[datetime] = Field(None, description="Last active timestamp")
+    is_connected: bool = Field(..., description="Whether agent is connected via WebSocket")
+    health_issues: List[str] = Field(default_factory=list, description="List of health issues")
+    recovery_attempts: int = Field(0, description="Number of recovery attempts")
+    uptime_seconds: int = Field(0, description="Agent uptime in seconds")
+
+
+class AgentMetricsResponse(BaseModel):
+    """Schema for agent performance metrics response."""
+    agent_id: uuid.UUID = Field(..., description="Agent ID")
+    uptime_seconds: int = Field(..., description="Agent uptime in seconds")
+    total_tasks_completed: int = Field(0, description="Total tasks completed")
+    total_tasks_failed: int = Field(0, description="Total tasks failed")
+    average_response_time_ms: float = Field(0.0, description="Average response time in milliseconds")
+    cpu_usage_percent: float = Field(0.0, description="CPU usage percentage")
+    memory_usage_mb: float = Field(0.0, description="Memory usage in MB")
+    availability_percentage: float = Field(0.0, description="Availability percentage")
+    last_performance_update: Optional[datetime] = Field(None, description="Last performance update timestamp")
+    error_rate_percentage: float = Field(0.0, description="Error rate percentage")
+
+
+class AgentRecoveryResponse(BaseModel):
+    """Schema for agent recovery response."""
+    agent_id: uuid.UUID = Field(..., description="Agent ID")
+    recovery_initiated: bool = Field(..., description="Whether recovery was initiated")
+    recovery_attempt: int = Field(..., description="Recovery attempt number")
+    estimated_recovery_time_seconds: int = Field(..., description="Estimated recovery time in seconds")
+    message: str = Field(..., description="Recovery status message")

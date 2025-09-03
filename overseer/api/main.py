@@ -32,6 +32,7 @@ from api.users import router as users_router
 from api.teams import router as teams_router
 from api.agents import router as agents_router
 from api.websocket import router as websocket_router
+from api.agent_lifecycle import router as lifecycle_router, start_agent_lifecycle, stop_agent_lifecycle
 
 # Initialize settings and logging
 settings = get_settings()
@@ -297,6 +298,7 @@ app.include_router(health_router)
 app.include_router(users_router, prefix="/api/users", tags=["users"])
 app.include_router(teams_router, prefix="/api/teams", tags=["teams"])
 app.include_router(agents_router, prefix="/api", tags=["agents"])
+app.include_router(lifecycle_router, prefix="/api", tags=["agent-lifecycle"])
 app.include_router(websocket_router, prefix="/ws", tags=["websocket"])
 
 
@@ -353,6 +355,9 @@ async def startup_event():
         f"Debug: {settings.DEBUG}, Version: 1.0.0"
     )
 
+    # Start agent lifecycle management
+    await start_agent_lifecycle()
+
 
 @app.on_event("shutdown")
 async def shutdown_event():
@@ -360,6 +365,9 @@ async def shutdown_event():
     Application shutdown event handler.
     """
     logger.info("Overseer API shutting down")
+
+    # Stop agent lifecycle management
+    await stop_agent_lifecycle()
 
 
 if __name__ == "__main__":

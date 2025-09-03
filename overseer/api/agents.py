@@ -298,26 +298,11 @@ async def approve_agent(
             detail="Agent not found"
         )
 
-    # Store original capabilities for response
-    original_capabilities = agent.capabilities
-
-    # Handle capabilities list serialization for SQLAlchemy change tracking
-    if isinstance(agent.capabilities, list):
-        import json
-        agent.capabilities = json.dumps(agent.capabilities)
-
+    # Update approval status
     agent.is_approved = approval_data.approved
 
     await db.commit()
     await db.refresh(agent)
-
-    # Restore capabilities as list for response serialization
-    if isinstance(agent.capabilities, str):
-        try:
-            import json
-            agent.capabilities = json.loads(agent.capabilities)
-        except (json.JSONDecodeError, TypeError):
-            agent.capabilities = original_capabilities
 
     return agent
 
