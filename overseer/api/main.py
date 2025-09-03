@@ -138,19 +138,11 @@ async def request_middleware(request: Request, call_next):
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException):
     """
-    Handle HTTP exceptions with structured error responses.
+    Handle HTTP exceptions with standard FastAPI error responses.
     """
+    # Use standard FastAPI error response format for compatibility
     error_response = {
-        "error": {
-            "type": "HTTPException",
-            "message": exc.detail,
-            "status_code": exc.status_code,
-        },
-        "request": {
-            "method": request.method,
-            "path": request.url.path,
-        },
-        "timestamp": datetime.utcnow().isoformat(),
+        "detail": exc.detail
     }
 
     logger.warning(

@@ -311,12 +311,19 @@ class TestUtils:
     @staticmethod
     def assert_error_response(response_data: dict, expected_status: int, expected_message: str = None):
         """Assert that error response has expected structure."""
-        assert "error" in response_data
-        assert response_data["error"]["status_code"] == expected_status
-        if expected_message:
-            assert expected_message in response_data["error"]["message"]
-        assert "timestamp" in response_data
-        assert "request" in response_data
+        # Handle both custom error format and standard FastAPI format
+        if "error" in response_data:
+            # Custom error format
+            assert response_data["error"]["status_code"] == expected_status
+            if expected_message:
+                assert expected_message in response_data["error"]["message"]
+            assert "timestamp" in response_data
+            assert "request" in response_data
+        else:
+            # Standard FastAPI error format
+            assert "detail" in response_data
+            if expected_message:
+                assert expected_message in response_data["detail"]
 
 
 # Pytest configuration

@@ -64,7 +64,7 @@ async def register_agent(
     # Validate team assignment if provided
     if agent_data.team_id:
         team_result = await db.execute(
-            select(Team).where(Team.id == agent_data.team_id)
+            select(Team).options(selectinload(Team.members)).where(Team.id == agent_data.team_id)
         )
         team = team_result.scalar_one_or_none()
         if not team:
@@ -91,7 +91,7 @@ async def register_agent(
         team_id=agent_data.team_id,
         owner_id=current_user.id,
         capabilities=agent_data.capabilities,
-        configuration=agent_data.configuration.dict() if agent_data.configuration else None,
+        configuration=agent_data.configuration.model_dump() if agent_data.configuration else None,
         version=agent_data.version,
         status=AgentStatus.INACTIVE.value,
         is_approved=current_user.role == UserRole.ADMIN  # Auto-approve for admins
@@ -238,10 +238,10 @@ async def update_agent(
             )
 
     # Update fields
-    update_data = agent_data.dict(exclude_unset=True)
+    update_data = agent_data.model_dump(exclude_unset=True)
     for field, value in update_data.items():
         if field == "configuration" and value:
-            setattr(agent, field, value.dict())
+            setattr(agent, field, value.model_dump())
         elif field == "type" and value:
             setattr(agent, field, value.value)
         else:
