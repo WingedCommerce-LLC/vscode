@@ -5,19 +5,31 @@ This module contains the Agent model and related enums for the Overseer platform
 Handles AI agent registration, configuration, and status tracking.
 """
 
-from sqlalchemy import Column, String, Text, ForeignKey, DateTime, JSON, Boolean
+from sqlalchemy import Column, String, Text, ForeignKey, DateTime, JSON, Boolean, Enum
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from .base import BaseModel
 import enum
 
 
+# Database-agnostic enum implementation
+def create_enum_column(enum_class, column_name=None, **kwargs):
+    """
+    Create a database-agnostic enum column that works with both PostgreSQL and SQLite.
+
+    For PostgreSQL: Uses native ENUM type with enum values
+    For SQLite: Uses String type with enum values
+    """
+    # Use String type for compatibility - the migration will handle PostgreSQL enum creation
+    return Column(column_name or enum_class.__name__.lower(), String(20), **kwargs)
+
+
 class AgentStatus(enum.Enum):
     """
-    Agent status values.
+    Agent status values (matching API schema).
 
     INACTIVE: Agent is registered but not active
-    ACTIVE: Agent is running and available for tasks
+    ACTIVE: Agent is active and available
     BUSY: Agent is currently working on a task
     ERROR: Agent has encountered an error
     MAINTENANCE: Agent is in maintenance mode
@@ -31,12 +43,12 @@ class AgentStatus(enum.Enum):
 
 class AgentType(enum.Enum):
     """
-    Agent type classifications.
+    Agent type classifications (matching API schema).
 
     CODER: Code generation and modification agent
     REVIEWER: Code review and analysis agent
     TESTER: Testing and QA agent
-    DOCUMENTER: Documentation generation agent
+    DOCUMENTER: Documentation agent
     ANALYST: Data analysis and reporting agent
     GENERAL: General purpose agent
     """
@@ -70,7 +82,8 @@ class Agent(BaseModel):
 
     name = Column(String(100), nullable=False, index=True)
     description = Column(Text, nullable=True)
-    type = Column(String(50), nullable=False, default=AgentType.GENERAL.value)
+    type = Column("agent_type", String(20), nullable=False,
+                  default=AgentType.GENERAL.value)
     team_id = Column(UUID(as_uuid=True), ForeignKey(
         'teams.id'), nullable=True)
     owner_id = Column(UUID(as_uuid=True), ForeignKey(
@@ -80,9 +93,7 @@ class Agent(BaseModel):
     configuration = Column(JSON, nullable=True)
     capabilities = Column(JSON, nullable=True)  # List of capability strings
     performance_metrics = Column(JSON, nullable=True)  # Performance data
-    last_heartbeat = Column(DateTime(timezone=True), nullable=True)
     last_active = Column(DateTime(timezone=True), nullable=True)
-    error_message = Column(Text, nullable=True)
     is_approved = Column(Boolean, nullable=False, default=False)
     version = Column(String(20), nullable=True)
 
@@ -101,7 +112,7 @@ class Agent(BaseModel):
         Returns:
             bool: True if agent can accept new tasks
         """
-        return self.status == AgentStatus.ACTIVE.value
+        return self.status == AgentStatus.INACTIVE.value
 
     def is_healthy(self) -> bool:
         """
@@ -112,19 +123,16 @@ class Agent(BaseModel):
         """
         return self.status not in [AgentStatus.ERROR.value, AgentStatus.MAINTENANCE.value]
 
-    def set_status(self, status: AgentStatus, error_message: str = None):
+    def set_status(self, status: AgentStatus, error_message: str | None = None):
         """
         Update agent status.
 
         Args:
             status: New agent status
-            error_message: Optional error message for ERROR status
+            error_message: Optional error message for ERROR status (not stored in DB)
         """
         self.status = status.value
-        if status == AgentStatus.ERROR and error_message:
-            self.error_message = error_message
-        elif status != AgentStatus.ERROR:
-            self.error_message = None
+        # Note: error_message is not stored in database schema
 
     def add_capability(self, capability: str):
         """

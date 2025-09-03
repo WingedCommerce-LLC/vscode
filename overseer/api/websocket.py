@@ -286,14 +286,14 @@ class ConnectionManager:
             # Update agent in database
             agent = await db.get(Agent, agent_uuid)
             if agent:
-                # Use update() method for proper SQLAlchemy column assignment
-                from sqlalchemy import update
-                stmt = update(Agent).where(Agent.id == agent_uuid).values(
-                    last_heartbeat=datetime.utcnow(),
-                    status=heartbeat.status if heartbeat.status else agent.status,
-                    performance_metrics=heartbeat.performance_metrics if heartbeat.performance_metrics else agent.performance_metrics
-                )
-                await db.execute(stmt)
+                # Update the ORM object directly so it can be properly refreshed in tests
+                agent.last_heartbeat = datetime.utcnow()
+                if heartbeat.status:
+                    agent.status = heartbeat.status
+                if heartbeat.performance_metrics:
+                    agent.performance_metrics = heartbeat.performance_metrics
+
+                db.add(agent)
                 await db.commit()
 
             # Update connection metadata

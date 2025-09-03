@@ -93,33 +93,33 @@ async def get_optional_current_user(
         return None
 
 
-def require_role(required_role):
+def require_role(required_roles):
     """
     Create a dependency that requires a specific role or higher.
 
     Args:
-        required_role: The minimum role required (single role or list of roles)
+        required_roles: The minimum role required (single role or list of roles)
 
     Returns:
         A dependency function that checks user role
     """
     async def role_checker(current_user: User = Depends(get_current_active_user)) -> User:
         # Handle both single role and list of roles
-        if isinstance(required_role, list):
+        if isinstance(required_roles, list):
             # Check if user has any of the required roles
-            has_permission = any(current_user.has_permission(role) for role in required_role)
+            has_permission = any(current_user.has_permission(role) for role in required_roles)
             if not has_permission:
-                role_names = [role.value for role in required_role]
+                role_names = [role.value for role in required_roles]
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
                     detail=f"Insufficient permissions. Required roles: {', '.join(role_names)}"
                 )
         else:
             # Single role check
-            if not current_user.has_permission(required_role):
+            if not current_user.has_permission(required_roles):
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
-                    detail=f"Insufficient permissions. Required role: {required_role.value}"
+                    detail=f"Insufficient permissions. Required role: {required_roles.value}"
                 )
         return current_user
 

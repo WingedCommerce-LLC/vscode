@@ -86,7 +86,7 @@ class AgentLifecycleManager:
             result = await db.execute(
                 select(Agent).where(
                     and_(
-                        Agent.status.in_(["active", "idle"]),
+                        Agent.status.in_(["IDLE", "BUSY"]),
                         Agent.is_approved == True
                     )
                 )
@@ -322,7 +322,7 @@ async def recover_agent(
         raise HTTPException(status_code=404, detail="Agent not found")
 
     # Check if agent needs recovery
-    if agent.status in ["active", "idle"]:
+    if agent.status in ["IDLE", "BUSY"]:
         raise HTTPException(status_code=400, detail="Agent does not need recovery")
 
     # Reset recovery attempts for manual recovery
